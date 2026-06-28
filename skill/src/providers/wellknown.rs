@@ -47,21 +47,19 @@ impl HostProvider for WellKnownProvider {
         Some(format!("wellknown/{host}"))
     }
 
+    #[cfg(feature = "network")]
     fn fetch_skill<'a>(&'a self, url: &'a str) -> BoxFuture<'a, Result<Option<RemoteSkill>>> {
-        #[cfg(feature = "network")]
-        {
-            Box::pin(async move {
-                let Some(wk) = self.fetch_single_skill(url).await? else {
-                    return Ok(None);
-                };
-                Ok(Some(wk.remote))
-            })
-        }
-        #[cfg(not(feature = "network"))]
-        {
-            let _ = url;
-            Box::pin(async move { Ok(None) })
-        }
+        Box::pin(async move {
+            let Some(wk) = self.fetch_single_skill(url).await? else {
+                return Ok(None);
+            };
+            Ok(Some(wk.remote))
+        })
+    }
+
+    #[cfg(not(feature = "network"))]
+    fn fetch_skill<'a>(&'a self, _url: &'a str) -> BoxFuture<'a, Result<Option<RemoteSkill>>> {
+        Box::pin(async move { Ok(None) })
     }
 
     fn to_raw_url(&self, url: &str) -> String {
