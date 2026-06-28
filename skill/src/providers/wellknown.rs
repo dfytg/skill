@@ -4,15 +4,20 @@
 
 use super::traits::{BoxFuture, HostProvider};
 use crate::error::Result;
+#[cfg(feature = "network")]
 use crate::sanitize::sanitize_metadata;
-use crate::types::{RemoteSkill, WellKnownIndex, WellKnownSkill, WellKnownSkillEntry};
+use crate::types::RemoteSkill;
+#[cfg(feature = "network")]
+use crate::types::{WellKnownIndex, WellKnownSkill, WellKnownSkillEntry};
 
 /// Well-known skills directory paths, tried in order.
 ///
 /// The `agent-skills` path matches the current TS reference; `skills` is kept
 /// as a legacy fallback for older deployments.
+#[cfg(feature = "network")]
 const WELL_KNOWN_PATHS: &[&str] = &[".well-known/agent-skills", ".well-known/skills"];
 /// Index file name within the well-known path.
+#[cfg(feature = "network")]
 const INDEX_FILE: &str = "index.json";
 /// Hosts excluded from well-known skill resolution.
 const EXCLUDED_HOSTS: &[&str] = &["github.com", "gitlab.com", "huggingface.co"];
@@ -43,12 +48,20 @@ impl HostProvider for WellKnownProvider {
     }
 
     fn fetch_skill<'a>(&'a self, url: &'a str) -> BoxFuture<'a, Result<Option<RemoteSkill>>> {
-        Box::pin(async move {
-            let Some(wk) = self.fetch_single_skill(url).await? else {
-                return Ok(None);
-            };
-            Ok(Some(wk.remote))
-        })
+        #[cfg(feature = "network")]
+        {
+            Box::pin(async move {
+                let Some(wk) = self.fetch_single_skill(url).await? else {
+                    return Ok(None);
+                };
+                Ok(Some(wk.remote))
+            })
+        }
+        #[cfg(not(feature = "network"))]
+        {
+            let _ = url;
+            Box::pin(async move { Ok(None) })
+        }
     }
 
     fn to_raw_url(&self, url: &str) -> String {
@@ -255,6 +268,7 @@ impl WellKnownProvider {
 }
 
 /// Check whether a skill entry has all required fields.
+#[cfg(feature = "network")]
 fn is_valid_skill_entry(entry: &WellKnownSkillEntry) -> bool {
     if entry.name.is_empty() || entry.description.is_empty() || entry.files.is_empty() {
         return false;

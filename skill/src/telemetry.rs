@@ -11,6 +11,7 @@ use std::sync::OnceLock;
 #[cfg(feature = "telemetry")]
 const TELEMETRY_URL: &str = "https://add-skill.vercel.sh/t";
 /// Audit endpoint URL.
+#[cfg(feature = "network")]
 const AUDIT_URL: &str = "https://add-skill.vercel.sh/audit";
 
 /// Cached CLI version string for telemetry payloads.
