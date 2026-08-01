@@ -3,8 +3,10 @@
 //! Provides authentication token discovery and REST API access for
 //! repository metadata and git tree hashing.
 
+#[cfg(feature = "network")]
 use std::path::PathBuf;
 
+#[cfg(feature = "network")]
 use crate::error::{Result, SkillError};
 
 /// Discover a GitHub token from the environment (`GITHUB_TOKEN` / `GH_TOKEN`)
